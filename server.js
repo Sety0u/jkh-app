@@ -6,16 +6,16 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 3000;
 
-// --- MIDDLEWARE ---
+// middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-// --- DATABASE ---
+// база
 const dbPath = path.join(__dirname, "kkh.db");
 const db = new sqlite3.Database(dbPath);
 
-// --- CREATE TABLE ---
+// создаём таблицу
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -28,51 +28,49 @@ db.serialize(() => {
   `);
 });
 
-// --- REGISTER ---
+
+// ======================
+// 🔐 РЕГИСТРАЦИЯ
+// ======================
 app.post("/api/register", (req, res) => {
   const { username, password, name, surname } = req.body;
 
   if (!username || !password) {
-    return res.json({ error: "Заполни логин и пароль" });
+    return res.status(400).json({ error: "Нет данных" });
   }
 
-  db.get(
-    "SELECT * FROM users WHERE username = ?",
-    [username],
-    (err, row) => {
-      if (row) {
-        return res.json({ error: "Пользователь уже существует" });
+  db.run(
+    `INSERT INTO users (username, password, name, surname) VALUES (?, ?, ?, ?)`,
+    [username, password, name || "", surname || ""],
+    function (err) {
+      if (err) {
+        return res.status(400).json({ error: "Пользователь уже существует" });
       }
 
-      db.run(
-        "INSERT INTO users (username, password, name, surname) VALUES (?, ?, ?, ?)",
-        [username, password, name || "", surname || ""],
-        function (err) {
-          if (err) {
-            return res.json({ error: "Ошибка базы" });
-          }
-
-          res.json({ success: true });
-        }
-      );
+      res.json({ success: true });
     }
   );
 });
 
-// --- LOGIN ---
+
+// ======================
+// 🔑 ЛОГИН
+// ======================
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
 
   db.get(
-    "SELECT * FROM users WHERE username = ? AND password = ?",
+    `SELECT * FROM users WHERE username = ? AND password = ?`,
     [username, password],
     (err, user) => {
-      if (!user) {
-        return res.json({ error: "Неверный логин или пароль" });
+      if (err || !user) {
+        return res.status(401).json({ error: "Неверный логин или пароль" });
       }
 
       res.cookie("session_token", user.id, {
         httpOnly: true,
+        secure: true,      // важно для https
+        sameSite: "none",  // важно для телефонов
       });
 
       res.json({ success: true });
@@ -80,7 +78,10 @@ app.post("/api/login", (req, res) => {
   );
 });
 
-// --- ME (проверка авторизации) ---
+
+// ======================
+// 👤 ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ
+// ======================
 app.get("/api/me", (req, res) => {
   const userId = req.cookies.session_token;
 
@@ -88,29 +89,32 @@ app.get("/api/me", (req, res) => {
     return res.json({ user: null });
   }
 
-  db.get("SELECT * FROM users WHERE id = ?", [userId], (err, user) => {
-    if (!user) {
-      return res.json({ user: null });
-    }
+  db.get(
+    `SELECT id, username, name, surname FROM users WHERE id = ?`,
+    [userId],
+    (err, user) => {
+      if (err || !user) {
+        return res.json({ user: null });
+      }
 
-    res.json({
-      user: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        surname: user.surname,
-      },
-    });
-  });
+      res.json({ user });
+    }
+  );
 });
 
-// --- LOGOUT ---
+
+// ======================
+// 🚪 ВЫХОД
+// ======================
 app.post("/api/logout", (req, res) => {
   res.clearCookie("session_token");
   res.json({ success: true });
 });
 
-// --- START SERVER ---
+
+// ======================
+// 🚀 ЗАПУСК
+// ======================
 app.listen(PORT, () => {
   console.log("Server started on port " + PORT);
 });
