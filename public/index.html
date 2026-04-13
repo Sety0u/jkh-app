@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>ЖКХ‑калькулятор</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- Навигация -->
+    <div class="tabs">
+      <div class="tab active" id="tab_auth" onclick="switchPanel('auth')">Вход / Регистрация</div>
+      <div class="tab" id="tab_profile" onclick="switchPanel('profile')">Личный кабинет</div>
+      <div class="tab" id="tab_calc" onclick="switchPanel('calc')">Калькулятор ЖКХ</div>
+      <div class="tab-spacer"></div>
+      <div id="loggedInAs" class="logged-in-badge" style="display:none;"></div>
+      <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none;">Выйти</button>
+    </div>
+
+    <!-- ───── Панель авторизации ───── -->
+    <div class="panel active" id="auth">
+      <div class="auth-wrap">
+        <div class="auth-logo">🏠</div>
+        <h2 class="title" id="authTitle">Добро пожаловать</h2>
+        <p class="subtitle" id="authSubtitle">ЖКХ-калькулятор. Войдите, чтобы начать расчёт.</p>
+
+        <div id="authError"   class="msg error"   style="display:none;"></div>
+        <div id="authSuccess" class="msg success" style="display:none;"></div>
+
+        <div class="card auth-card">
+          <!-- Поле «Имя» — только для регистрации -->
+          <div class="input-group" id="registerFields" style="display:none;">
+            <label>Ваше имя <span class="req">*</span></label>
+            <input type="text" id="reg_name" placeholder="Иван Петров" autocomplete="name" />
+            <div class="hint">Имя и фамилия через пробел</div>
+          </div>
+
+          <div class="input-group">
+            <label>Логин <span class="req">*</span></label>
+            <input type="text" id="username_auth" placeholder="ivan_petrov" autocomplete="username"
+              oninput="this.value=this.value.replace(/\s/,'')" />
+            <div class="hint">3–30 символов: буквы, цифры, _</div>
+          </div>
+
+          <div class="input-group">
+            <label>Пароль <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="password_auth" placeholder="Введите пароль" autocomplete="current-password" />
+              <button class="pw-eye" type="button" onclick="togglePw('password_auth',this)">👁</button>
+            </div>
+            <div class="hint">Минимум 6 символов, буква и цифра</div>
+          </div>
+
+          <div class="input-group" id="password_auth2_group" style="display:none;">
+            <label>Повторите пароль <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input type="password" id="password_auth2" placeholder="Повторите пароль" autocomplete="new-password" />
+              <button class="pw-eye" type="button" onclick="togglePw('password_auth2',this)">👁</button>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" id="btnLogin"    onclick="login()">Войти</button>
+            <button class="btn-primary" id="btnRegister" onclick="register()" style="display:none;">Зарегистрироваться</button>
+          </div>
+
+          <div id="switchToRegister" class="switch-link">
+            Нет аккаунта?
+            <button class="btn-link" onclick="setAuthMode('register')">Создать аккаунт</button>
+          </div>
+          <div id="switchToLogin" class="switch-link" style="display:none;">
+            Уже есть аккаунт?
+            <button class="btn-link" onclick="setAuthMode('login')">Войти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ───── Панель личного кабинета ───── -->
+    <div class="panel" id="profile">
+      <div class="card">
+        <h2 class="title">Личный кабинет</h2>
+        <p class="subtitle">Данные профиля отображаются в расчётах.</p>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label>Имя</label>
+            <input type="text" placeholder="Иван" id="profileName" />
+          </div>
+          <div class="input-group">
+            <label>Фамилия</label>
+            <input type="text" placeholder="Петров" id="profileSurname" />
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Телефон</label>
+            <input type="text" placeholder="+7 (999) 123‑45‑67" id="profilePhone" />
+          </div>
+          <div class="input-group">
+            <label>Эл. почта</label>
+            <input type="email" placeholder="example@mail.ru" id="profileEmail" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Тема оформления</label>
+          <select id="themeSelect" onchange="switchTheme(this.value)">
+            <option value="light">Светлая</option>
+            <option value="dark">Тёмная</option>
+          </select>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="saveProfile()">Сохранить данные</button>
+          <button class="btn-outline" onclick="switchPanel('calc')">Перейти к калькулятору</button>
+        </div>
+        <div id="profileSaveMsg" class="msg success" style="display:none;">Данные успешно сохранены!</div>
+      </div>
+
+      <!-- Смена пароля -->
+      <div class="card">
+        <h3>Смена пароля</h3>
+        <div class="input-group" style="margin-top:12px;">
+          <label>Текущий пароль</label>
+          <div class="pw-wrap">
+            <input type="password" id="oldPassword" placeholder="Текущий пароль" />
+            <button class="pw-eye" type="button" onclick="togglePw('oldPassword',this)">👁</button>
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>Новый пароль</label>
+            <div class="pw-wrap">
+              <input type="password" id="newPassword" placeholder="Новый пароль" />
+              <button class="pw-eye" type="button" onclick="togglePw('newPassword',this)">👁</button>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Повторите новый</label>
+            <div class="pw-wrap">
+              <input type="password" id="newPassword2" placeholder="Повторите новый" />
+              <button class="pw-eye" type="button" onclick="togglePw('newPassword2',this)">👁</button>
+            </div>
+          </div>
+        </div>
+        <button class="btn-outline" onclick="changePassword()">Изменить пароль</button>
+        <div id="pwChangeMsg" class="msg" style="display:none;margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <!-- ───── Панель калькулятора ───── -->
+    <div class="panel" id="calc">
+      <div class="card">
+        <h2 class="title">Расчет коммунальных платежей</h2>
+        <p class="subtitle">
+          1) Введите тарифы.&nbsp; 2) Введите предыдущие и текущие показания.&nbsp; 3) Нажмите «Рассчитать».
+        </p>
+
+        <div class="card-light">
+          <div class="subtitle" id="userInfo">Пользователь: не указан</div>
+        </div>
+
+        <div class="card-light">
+          <h3>Тарифы</h3>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Элект. (день/ночь), ₽/кВт·ч</label>
+              <div style="display:flex;gap:8px;">
+                <input type="number" step="0.01" id="tariff_electric_day"   value="5.47"  placeholder="День"  />
+                <input type="number" step="0.01" id="tariff_electric_night" value="2.10"  placeholder="Ночь"  />
+              </div>
+            </div>
+            <div class="input-group"><label>Вода, ₽/м³</label>          <input type="number" step="0.01"  id="tariff_water" value="42.50" /></div>
+            <div class="input-group"><label>Отопление, ₽/Гкал</label>   <input type="number" step="0.01"  id="tariff_heat"  value="2100"  /></div>
+            <div class="input-group"><label>Газ, ₽/м³</label>           <input type="number" step="0.01"  id="tariff_gas"   value="7.50"  /></div>
+          </div>
+        </div>
+
+        <div class="card"><h3>Электричество (день/ночь)</h3>
+          <div class="input-row">
+            <div class="input-group"><label>Предыд. днём, кВт·ч</label>  <input type="number" step="0.1" id="meter_electric_day_prev"   placeholder="0" /></div>
+            <div class="input-group"><label>Текущ. днём, кВт·ч</label>   <input type="number" step="0.1" id="meter_electric_day_curr"   placeholder="0" /></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Предыд. ночью, кВт·ч</label> <input type="number" step="0.1" id="meter_electric_night_prev" placeholder="0" /></div>
+            <div class="input-group"><label>Текущ. ночью, кВт·ч</label>  <input type="number" step="0.1" id="meter_electric_night_curr" placeholder="0" /></div>
+          </div>
+        </div>
+
+        <div class="card"><h3>Вода</h3>
+          <div class="input-row">
+            <div class="input-group"><label>Предыдущие, м³</label> <input type="number" step="0.1"   id="meter_water_prev" placeholder="0" /></div>
+            <div class="input-group"><label>Текущие, м³</label>    <input type="number" step="0.1"   id="meter_water_curr" placeholder="0" /></div>
+          </div>
+        </div>
+
+        <div class="card"><h3>Отопление</h3>
+          <div class="input-row">
+            <div class="input-group"><label>Предыдущие, Гкал</label> <input type="number" step="0.001" id="meter_heat_prev" placeholder="0" /></div>
+            <div class="input-group"><label>Текущие, Гкал</label>    <input type="number" step="0.001" id="meter_heat_curr" placeholder="0" /></div>
+          </div>
+        </div>
+
+        <div class="card"><h3>Газ</h3>
+          <div class="input-row">
+            <div class="input-group"><label>Предыдущие, м³</label> <input type="number" step="0.1" id="meter_gas_prev" placeholder="0" /></div>
+            <div class="input-group"><label>Текущие, м³</label>    <input type="number" step="0.1" id="meter_gas_curr" placeholder="0" /></div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="calculate()">Рассчитать сумму</button>
+        <button class="btn-outline" style="margin:10px 0 0 8px;" onclick="clearHistory()">Очистить историю</button>
+
+        <div class="card">
+          <h3>История расчетов</h3>
+          <div id="history" style="max-height:200px;overflow-y:auto;padding:6px 0;"></div>
+        </div>
+
+        <div class="card">
+          <h3>График платежей</h3>
+          <canvas id="chartCanvas" style="max-width:100%;height:300px;"></canvas>
+        </div>
+
+        <div class="result">
+          <div class="result-title">Итоговый расчет</div>
+          <div class="subtitle">Электричество: <span id="electricResult">0 ₽</span></div>
+          <div class="subtitle">Вода: <span id="waterResult">0 ₽</span></div>
+          <div class="subtitle">Отопление: <span id="heatResult">0 ₽</span></div>
+          <div class="subtitle">Газ: <span id="gasResult">0 ₽</span></div>
+          <div class="result-text">Итого к оплате: <span id="totalAmount">0 ₽</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const show = inp.type === "password";
+      inp.type = show ? "text" : "password";
+      btn.style.opacity = show ? "1" : "0.45";
+    }
+  </script>
+  <script src="script_api.js"></script>
+</body>
+</html>
