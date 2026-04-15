@@ -2,246 +2,459 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>ЖКХ‑калькулятор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>МойЖКХ — учёт показаний и коммунальных расходов</title>
+  <meta name="description" content="МойЖКХ помогает вести объекты, сохранять тарифы, считать коммунальные платежи и видеть историю расходов." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="container">
-    <!-- Навигация -->
-    <div class="tabs">
-      <div class="tab active" id="tab_auth" onclick="switchPanel('auth')">Вход / Регистрация</div>
-      <div class="tab" id="tab_profile" onclick="switchPanel('profile')">Личный кабинет</div>
-      <div class="tab" id="tab_calc" onclick="switchPanel('calc')">Калькулятор ЖКХ</div>
-      <div class="tab-spacer"></div>
-      <div id="loggedInAs" class="logged-in-badge" style="display:none;"></div>
-      <button id="logoutBtn" class="logout-btn" onclick="logout()" style="display:none;">Выйти</button>
-    </div>
-
-    <!-- ───── Панель авторизации ───── -->
-    <div class="panel active" id="auth">
-      <div class="auth-wrap">
-        <div class="auth-logo">🏠</div>
-        <h2 class="title" id="authTitle">Добро пожаловать</h2>
-        <p class="subtitle" id="authSubtitle">ЖКХ-калькулятор. Войдите, чтобы начать расчёт.</p>
-
-        <div id="authError"   class="msg error"   style="display:none;"></div>
-        <div id="authSuccess" class="msg success" style="display:none;"></div>
-
-        <div class="card auth-card">
-          <!-- Поле «Имя» — только для регистрации -->
-          <div class="input-group" id="registerFields" style="display:none;">
-            <label>Ваше имя <span class="req">*</span></label>
-            <input type="text" id="reg_name" placeholder="Иван Петров" autocomplete="name" />
-            <div class="hint">Имя и фамилия через пробел</div>
-          </div>
-
-          <div class="input-group">
-            <label>Логин <span class="req">*</span></label>
-            <input type="text" id="username_auth" placeholder="ivan_petrov" autocomplete="username"
-              oninput="this.value=this.value.replace(/\s/,'')" />
-            <div class="hint">3–30 символов: буквы, цифры, _</div>
-          </div>
-
-          <div class="input-group">
-            <label>Пароль <span class="req">*</span></label>
-            <div class="pw-wrap">
-              <input type="password" id="password_auth" placeholder="Введите пароль" autocomplete="current-password" />
-              <button class="pw-eye" type="button" onclick="togglePw('password_auth',this)">👁</button>
-            </div>
-            <div class="hint">Минимум 6 символов, буква и цифра</div>
-          </div>
-
-          <div class="input-group" id="password_auth2_group" style="display:none;">
-            <label>Повторите пароль <span class="req">*</span></label>
-            <div class="pw-wrap">
-              <input type="password" id="password_auth2" placeholder="Повторите пароль" autocomplete="new-password" />
-              <button class="pw-eye" type="button" onclick="togglePw('password_auth2',this)">👁</button>
-            </div>
-          </div>
-
-          <div class="btn-row">
-            <button class="btn-primary" id="btnLogin"    onclick="login()">Войти</button>
-            <button class="btn-primary" id="btnRegister" onclick="register()" style="display:none;">Зарегистрироваться</button>
-          </div>
-
-          <div id="switchToRegister" class="switch-link">
-            Нет аккаунта?
-            <button class="btn-link" onclick="setAuthMode('register')">Создать аккаунт</button>
-          </div>
-          <div id="switchToLogin" class="switch-link" style="display:none;">
-            Уже есть аккаунт?
-            <button class="btn-link" onclick="setAuthMode('login')">Войти</button>
-          </div>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand" onclick="goHome()">
+        <div class="brand-mark">🏠</div>
+        <div>
+          <div class="brand-title">МойЖКХ</div>
+          <div class="brand-subtitle">Учёт показаний и расходов</div>
         </div>
       </div>
-    </div>
 
-    <!-- ───── Панель личного кабинета ───── -->
-    <div class="panel" id="profile">
-      <div class="card">
-        <h2 class="title">Личный кабинет</h2>
-        <p class="subtitle">Данные профиля отображаются в расчётах.</p>
+      <nav class="nav" id="mainNav">
+        <button class="nav-btn active public-only" id="nav_landing" onclick="switchPanel('landing')">Главная</button>
+        <button class="nav-btn public-only" id="nav_auth" onclick="switchPanel('auth')">Вход</button>
 
-        <div class="input-row">
-          <div class="input-group">
-            <label>Имя</label>
-            <input type="text" placeholder="Иван" id="profileName" />
-          </div>
-          <div class="input-group">
-            <label>Фамилия</label>
-            <input type="text" placeholder="Петров" id="profileSurname" />
-          </div>
-        </div>
-        <div class="input-row">
-          <div class="input-group">
-            <label>Телефон</label>
-            <input type="text" placeholder="+7 (999) 123‑45‑67" id="profilePhone" />
-          </div>
-          <div class="input-group">
-            <label>Эл. почта</label>
-            <input type="email" placeholder="example@mail.ru" id="profileEmail" />
-          </div>
-        </div>
+        <button class="nav-btn private-only" id="nav_dashboard" onclick="switchPanel('dashboard')">Дашборд</button>
+        <button class="nav-btn private-only" id="nav_properties" onclick="switchPanel('properties')">Объекты</button>
+        <button class="nav-btn private-only" id="nav_calc" onclick="switchPanel('calc')">Расчёт</button>
+        <button class="nav-btn private-only" id="nav_history" onclick="switchPanel('history')">История</button>
+        <button class="nav-btn private-only" id="nav_profile" onclick="switchPanel('profile')">Профиль</button>
+      </nav>
 
-        <div class="input-group">
-          <label>Тема оформления</label>
-          <select id="themeSelect" onchange="switchTheme(this.value)">
-            <option value="light">Светлая</option>
-            <option value="dark">Тёмная</option>
-          </select>
-        </div>
-
-        <div class="btn-row">
-          <button class="btn-primary" onclick="saveProfile()">Сохранить данные</button>
-          <button class="btn-outline" onclick="switchPanel('calc')">Перейти к калькулятору</button>
-        </div>
-        <div id="profileSaveMsg" class="msg success" style="display:none;">Данные успешно сохранены!</div>
+      <div class="topbar-right">
+        <div id="loggedInAs" class="logged-user" style="display:none;"></div>
+        <button id="logoutBtn" class="btn btn-outline private-only" style="display:none;" onclick="logout()">Выйти</button>
       </div>
+    </header>
 
-      <!-- Смена пароля -->
-      <div class="card">
-        <h3>Смена пароля</h3>
-        <div class="input-group" style="margin-top:12px;">
-          <label>Текущий пароль</label>
-          <div class="pw-wrap">
-            <input type="password" id="oldPassword" placeholder="Текущий пароль" />
-            <button class="pw-eye" type="button" onclick="togglePw('oldPassword',this)">👁</button>
-          </div>
-        </div>
-        <div class="input-row">
-          <div class="input-group">
-            <label>Новый пароль</label>
-            <div class="pw-wrap">
-              <input type="password" id="newPassword" placeholder="Новый пароль" />
-              <button class="pw-eye" type="button" onclick="togglePw('newPassword',this)">👁</button>
+    <main class="page-wrap">
+      <section class="panel active" id="landing">
+        <div class="hero card hero-card">
+          <div class="hero-copy">
+            <span class="eyebrow">Реальный продукт, а не просто калькулятор</span>
+            <h1>Веди объекты, считай коммуналку и не теряй историю расходов</h1>
+            <p class="lead">
+              МойЖКХ помогает сохранить тарифы, быстро ввести показания и понять,
+              сколько вы реально тратите по квартире месяц за месяцем.
+            </p>
+            <div class="btn-row">
+              <button class="btn btn-primary" onclick="openAuth('register')">Начать учёт</button>
+              <button class="btn btn-outline" onclick="openAuth('login')">У меня уже есть аккаунт</button>
             </div>
           </div>
-          <div class="input-group">
-            <label>Повторите новый</label>
-            <div class="pw-wrap">
-              <input type="password" id="newPassword2" placeholder="Повторите новый" />
-              <button class="pw-eye" type="button" onclick="togglePw('newPassword2',this)">👁</button>
+          <div class="hero-side">
+            <div class="hero-metric">
+              <div class="hero-metric-label">Сценарий продукта</div>
+              <div class="hero-metric-value">Объекты → показания → расчёт</div>
+            </div>
+            <div class="hero-metric muted">
+              <div class="hero-metric-label">Что уже внутри</div>
+              <ul>
+                <li>Сохранение тарифов</li>
+                <li>История расчётов</li>
+                <li>График расходов</li>
+                <li>Личный кабинет</li>
+              </ul>
             </div>
           </div>
         </div>
-        <button class="btn-outline" onclick="changePassword()">Изменить пароль</button>
-        <div id="pwChangeMsg" class="msg" style="display:none;margin-top:8px;"></div>
-      </div>
-    </div>
 
-    <!-- ───── Панель калькулятора ───── -->
-    <div class="panel" id="calc">
-      <div class="card">
-        <h2 class="title">Расчет коммунальных платежей</h2>
-        <p class="subtitle">
-          1) Введите тарифы.&nbsp; 2) Введите предыдущие и текущие показания.&nbsp; 3) Нажмите «Рассчитать».
-        </p>
-
-        <div class="card-light">
-          <div class="subtitle" id="userInfo">Пользователь: не указан</div>
+        <div class="grid-3">
+          <article class="card feature-card">
+            <div class="feature-icon">🏢</div>
+            <h3>Учёт по объектам</h3>
+            <p>Добавляй квартиру, дачу или съёмное жильё и держи всё в одном аккуратном кабинете.</p>
+          </article>
+          <article class="card feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Быстрый расчёт</h3>
+            <p>Сохраняй тарифы и считай электричество, воду, тепло и газ без ручной рутины.</p>
+          </article>
+          <article class="card feature-card">
+            <div class="feature-icon">📈</div>
+            <h3>История расходов</h3>
+            <p>Смотри прошлые расчёты, сравнивай суммы и отслеживай рост коммунальных платежей.</p>
+          </article>
         </div>
 
-        <div class="card-light">
-          <h3>Тарифы</h3>
-          <div class="input-row">
-            <div class="input-group">
-              <label>Элект. (день/ночь), ₽/кВт·ч</label>
-              <div style="display:flex;gap:8px;">
-                <input type="number" step="0.01" id="tariff_electric_day"   value="5.47"  placeholder="День"  />
-                <input type="number" step="0.01" id="tariff_electric_night" value="2.10"  placeholder="Ночь"  />
+        <div class="card steps-card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Как это работает</div>
+              <h2>Один понятный путь без лишнего шума</h2>
+            </div>
+          </div>
+          <div class="steps-grid">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div>
+                <h4>Создай аккаунт</h4>
+                <p>Зарегистрируйся и попади в чистый кабинет без общей перегруженной формы.</p>
               </div>
             </div>
-            <div class="input-group"><label>Вода, ₽/м³</label>          <input type="number" step="0.01"  id="tariff_water" value="42.50" /></div>
-            <div class="input-group"><label>Отопление, ₽/Гкал</label>   <input type="number" step="0.01"  id="tariff_heat"  value="2100"  /></div>
-            <div class="input-group"><label>Газ, ₽/м³</label>           <input type="number" step="0.01"  id="tariff_gas"   value="7.50"  /></div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div>
+                <h4>Добавь объект</h4>
+                <p>Укажи квартиру или другой объект, чтобы вести учёт не абстрактно, а по месту.</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div>
+                <h4>Введи тарифы и показания</h4>
+                <p>Тарифы можно сохранить, а расчёт сразу попадёт в историю расходов.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="auth">
+        <div class="auth-shell">
+          <div class="auth-card card">
+            <div class="auth-head">
+              <div class="auth-mark">🔐</div>
+              <h2 id="authTitle">Вход в кабинет</h2>
+              <p id="authSubtitle">Войдите, чтобы вести объекты, расчёты и историю расходов.</p>
+            </div>
+
+            <div id="authError" class="msg msg-error" style="display:none;"></div>
+            <div id="authSuccess" class="msg msg-success" style="display:none;"></div>
+
+            <div class="input-group auth-register-only" style="display:none;">
+              <label for="reg_name">Имя <span class="req">*</span></label>
+              <input type="text" id="reg_name" placeholder="Иван" autocomplete="name" />
+            </div>
+
+            <div class="input-group auth-register-only" style="display:none;">
+              <label for="reg_surname">Фамилия</label>
+              <input type="text" id="reg_surname" placeholder="Петров" autocomplete="family-name" />
+            </div>
+
+            <div class="input-group">
+              <label for="username_auth">Логин <span class="req">*</span></label>
+              <input type="text" id="username_auth" placeholder="ivan_petrov" autocomplete="username" oninput="this.value=this.value.replace(/\s/g,'')" />
+              <div class="hint">3–30 символов: буквы, цифры и _</div>
+            </div>
+
+            <div class="input-group">
+              <label for="password_auth">Пароль <span class="req">*</span></label>
+              <div class="pw-wrap">
+                <input type="password" id="password_auth" placeholder="Введите пароль" autocomplete="current-password" />
+                <button type="button" class="pw-eye" onclick="togglePw('password_auth', this)">👁</button>
+              </div>
+              <div class="hint">Минимум 6 символов, хотя бы одна буква и одна цифра</div>
+            </div>
+
+            <div class="btn-row auth-actions">
+              <button class="btn btn-primary" id="authSubmitBtn" onclick="authSubmit()">Войти</button>
+              <button class="btn btn-outline" onclick="switchAuthMode()" id="authModeSwitchBtn">Создать аккаунт</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="dashboard">
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Рабочий стол</div>
+                <h2>Дашборд</h2>
+              </div>
+              <button class="btn btn-outline" onclick="switchPanel('properties')">Управлять объектами</button>
+            </div>
+            <div id="dashboardWelcome" class="welcome-box"></div>
+            <div id="dashboardPropertyState"></div>
+          </div>
+
+          <div class="card summary-card">
+            <div class="eyebrow">Последний расчёт</div>
+            <div id="dashboardLastCalc" class="empty-state compact">
+              Пока нет расчётов. Сделайте первый расчёт, и здесь появится краткая сводка.
+            </div>
           </div>
         </div>
 
-        <div class="card"><h3>Электричество (день/ночь)</h3>
-          <div class="input-row">
-            <div class="input-group"><label>Предыд. днём, кВт·ч</label>  <input type="number" step="0.1" id="meter_electric_day_prev"   placeholder="0" /></div>
-            <div class="input-group"><label>Текущ. днём, кВт·ч</label>   <input type="number" step="0.1" id="meter_electric_day_curr"   placeholder="0" /></div>
+        <div class="dashboard-grid bottom">
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Быстрые действия</div>
+                <h2>Что можно сделать сейчас</h2>
+              </div>
+            </div>
+            <div class="quick-actions">
+              <button class="action-tile" onclick="switchPanel('properties')">
+                <span class="action-icon">🏢</span>
+                <span class="action-title">Добавить или выбрать объект</span>
+                <span class="action-text">Основа всего учёта в продукте</span>
+              </button>
+              <button class="action-tile" onclick="switchPanel('calc')">
+                <span class="action-icon">🧮</span>
+                <span class="action-title">Сделать расчёт</span>
+                <span class="action-text">Сохранить тарифы и добавить запись в историю</span>
+              </button>
+              <button class="action-tile" onclick="switchPanel('history')">
+                <span class="action-icon">📚</span>
+                <span class="action-title">Посмотреть историю</span>
+                <span class="action-text">Сравнить прошлые расходы и динамику</span>
+              </button>
+            </div>
           </div>
-          <div class="input-row">
-            <div class="input-group"><label>Предыд. ночью, кВт·ч</label> <input type="number" step="0.1" id="meter_electric_night_prev" placeholder="0" /></div>
-            <div class="input-group"><label>Текущ. ночью, кВт·ч</label>  <input type="number" step="0.1" id="meter_electric_night_curr" placeholder="0" /></div>
+
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Динамика расходов</div>
+                <h2>График</h2>
+              </div>
+            </div>
+            <canvas id="dashboardChartCanvas" height="220"></canvas>
           </div>
         </div>
+      </section>
 
-        <div class="card"><h3>Вода</h3>
-          <div class="input-row">
-            <div class="input-group"><label>Предыдущие, м³</label> <input type="number" step="0.1"   id="meter_water_prev" placeholder="0" /></div>
-            <div class="input-group"><label>Текущие, м³</label>    <input type="number" step="0.1"   id="meter_water_curr" placeholder="0" /></div>
+      <section class="panel" id="properties">
+        <div class="card">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Объекты</div>
+              <h2>Квартиры и другие объекты</h2>
+            </div>
           </div>
-        </div>
+          <p class="section-text">Это новый фундамент продукта. Теперь пользователь работает не просто с формой, а с конкретным объектом.</p>
 
-        <div class="card"><h3>Отопление</h3>
-          <div class="input-row">
-            <div class="input-group"><label>Предыдущие, Гкал</label> <input type="number" step="0.001" id="meter_heat_prev" placeholder="0" /></div>
-            <div class="input-group"><label>Текущие, Гкал</label>    <input type="number" step="0.001" id="meter_heat_curr" placeholder="0" /></div>
-          </div>
+          <form class="property-form" onsubmit="saveProperty(event)">
+            <input type="hidden" id="property_id" />
+            <div class="grid-2">
+              <div class="input-group">
+                <label for="property_title">Название объекта <span class="req">*</span></label>
+                <input type="text" id="property_title" placeholder="Квартира" maxlength="80" />
+              </div>
+              <div class="input-group">
+                <label for="property_address">Адрес</label>
+                <input type="text" id="property_address" placeholder="г. Москва, ул. Примерная, д. 10" maxlength="180" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="property_note">Комментарий</label>
+              <input type="text" id="property_note" placeholder="Основной объект" maxlength="500" />
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Сохранить объект</button>
+              <button class="btn btn-outline" type="button" onclick="resetPropertyForm()">Сбросить</button>
+            </div>
+          </form>
         </div>
-
-        <div class="card"><h3>Газ</h3>
-          <div class="input-row">
-            <div class="input-group"><label>Предыдущие, м³</label> <input type="number" step="0.1" id="meter_gas_prev" placeholder="0" /></div>
-            <div class="input-group"><label>Текущие, м³</label>    <input type="number" step="0.1" id="meter_gas_curr" placeholder="0" /></div>
-          </div>
-        </div>
-
-        <button class="btn-primary" onclick="calculate()">Рассчитать сумму</button>
-        <button class="btn-outline" style="margin:10px 0 0 8px;" onclick="clearHistory()">Очистить историю</button>
 
         <div class="card">
-          <h3>История расчетов</h3>
-          <div id="history" style="max-height:200px;overflow-y:auto;padding:6px 0;"></div>
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Список</div>
+              <h2>Ваши объекты</h2>
+            </div>
+          </div>
+          <div id="propertiesList" class="property-list"></div>
         </div>
+      </section>
 
+      <section class="panel" id="calc">
         <div class="card">
-          <h3>График платежей</h3>
-          <canvas id="chartCanvas" style="max-width:100%;height:300px;"></canvas>
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">Расчёт</div>
+              <h2>Калькулятор коммунальных платежей</h2>
+            </div>
+            <div id="calcPropertyBadge" class="property-badge"></div>
+          </div>
+          <p class="section-text">На этом этапе тарифы и история ещё общие для пользователя, но интерфейс уже встроен в нормальную структуру продукта.</p>
         </div>
 
-        <div class="result">
-          <div class="result-title">Итоговый расчет</div>
-          <div class="subtitle">Электричество: <span id="electricResult">0 ₽</span></div>
-          <div class="subtitle">Вода: <span id="waterResult">0 ₽</span></div>
-          <div class="subtitle">Отопление: <span id="heatResult">0 ₽</span></div>
-          <div class="subtitle">Газ: <span id="gasResult">0 ₽</span></div>
-          <div class="result-text">Итого к оплате: <span id="totalAmount">0 ₽</span></div>
+        <div class="grid-2 calc-grid">
+          <div class="card">
+            <div class="section-head small">
+              <div>
+                <div class="eyebrow">Шаг 1</div>
+                <h3>Тарифы</h3>
+              </div>
+            </div>
+            <div class="tariffs-grid">
+              <div class="input-group tariff-electric">
+                <label>Электричество</label>
+                <div class="electric-inputs">
+                  <input type="number" step="0.01" id="tariff_electric_day" placeholder="День" />
+                  <input type="number" step="0.01" id="tariff_electric_night" placeholder="Ночь" />
+                </div>
+                <div class="hint">Два тарифа: дневной и ночной</div>
+              </div>
+              <div class="input-group">
+                <label for="tariff_water">Вода</label>
+                <input type="number" step="0.01" id="tariff_water" placeholder="₽ / м³" />
+              </div>
+              <div class="input-group">
+                <label for="tariff_heat">Отопление</label>
+                <input type="number" step="0.01" id="tariff_heat" placeholder="₽ / Гкал" />
+              </div>
+              <div class="input-group">
+                <label for="tariff_gas">Газ</label>
+                <input type="number" step="0.01" id="tariff_gas" placeholder="₽ / м³" />
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-outline" type="button" onclick="saveTariffs()">Сохранить тарифы</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-head small">
+              <div>
+                <div class="eyebrow">Шаг 2</div>
+                <h3>Показания счётчиков</h3>
+              </div>
+            </div>
+            <div class="meter-grid">
+              <div class="input-group"><label>Эл. день — предыдущие</label><input type="number" step="0.01" id="meter_e_day_prev" /></div>
+              <div class="input-group"><label>Эл. день — текущие</label><input type="number" step="0.01" id="meter_e_day_curr" /></div>
+              <div class="input-group"><label>Эл. ночь — предыдущие</label><input type="number" step="0.01" id="meter_e_night_prev" /></div>
+              <div class="input-group"><label>Эл. ночь — текущие</label><input type="number" step="0.01" id="meter_e_night_curr" /></div>
+              <div class="input-group"><label>Вода — предыдущие</label><input type="number" step="0.01" id="meter_water_prev" /></div>
+              <div class="input-group"><label>Вода — текущие</label><input type="number" step="0.01" id="meter_water_curr" /></div>
+              <div class="input-group"><label>Отопление — предыдущие</label><input type="number" step="0.01" id="meter_heat_prev" /></div>
+              <div class="input-group"><label>Отопление — текущие</label><input type="number" step="0.01" id="meter_heat_curr" /></div>
+              <div class="input-group"><label>Газ — предыдущие</label><input type="number" step="0.01" id="meter_gas_prev" /></div>
+              <div class="input-group"><label>Газ — текущие</label><input type="number" step="0.01" id="meter_gas_curr" /></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div class="card result-card">
+          <div class="section-head small">
+            <div>
+              <div class="eyebrow">Шаг 3</div>
+              <h3>Итог</h3>
+            </div>
+            <button class="btn btn-primary" onclick="calculate()">Рассчитать и сохранить</button>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-row"><span>Электричество</span><strong id="electricResult">0.00 ₽</strong></div>
+            <div class="result-row"><span>Вода</span><strong id="waterResult">0.00 ₽</strong></div>
+            <div class="result-row"><span>Отопление</span><strong id="heatResult">0.00 ₽</strong></div>
+            <div class="result-row"><span>Газ</span><strong id="gasResult">0.00 ₽</strong></div>
+          </div>
+
+          <div class="result-total-box">
+            <span>Итого к оплате</span>
+            <strong id="totalAmount">0.00 ₽</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="history">
+        <div class="grid-2 history-grid">
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">История</div>
+                <h2>Последние расчёты</h2>
+              </div>
+              <button class="btn btn-outline" onclick="clearHistory()">Очистить</button>
+            </div>
+            <div id="historyList" class="history-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">График</div>
+                <h2>Суммы по последним расчётам</h2>
+              </div>
+            </div>
+            <canvas id="chartCanvas" height="260"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="profile">
+        <div class="profile-grid">
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Профиль</div>
+                <h2>Личные данные</h2>
+              </div>
+            </div>
+            <div class="profile-headline" id="profileHeadline"></div>
+            <form onsubmit="saveProfile(event)">
+              <div class="grid-2">
+                <div class="input-group">
+                  <label for="profile_name">Имя <span class="req">*</span></label>
+                  <input type="text" id="profile_name" />
+                </div>
+                <div class="input-group">
+                  <label for="profile_surname">Фамилия</label>
+                  <input type="text" id="profile_surname" />
+                </div>
+              </div>
+              <div class="grid-2">
+                <div class="input-group">
+                  <label for="profile_phone">Телефон</label>
+                  <input type="text" id="profile_phone" />
+                </div>
+                <div class="input-group">
+                  <label for="profile_email">Email</label>
+                  <input type="email" id="profile_email" />
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" type="submit">Сохранить профиль</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="section-head">
+              <div>
+                <div class="eyebrow">Безопасность и вид</div>
+                <h2>Настройки</h2>
+              </div>
+            </div>
+            <form onsubmit="changePassword(event)">
+              <div class="input-group">
+                <label for="old_password">Текущий пароль</label>
+                <div class="pw-wrap">
+                  <input type="password" id="old_password" />
+                  <button type="button" class="pw-eye" onclick="togglePw('old_password', this)">👁</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="new_password">Новый пароль</label>
+                <div class="pw-wrap">
+                  <input type="password" id="new_password" />
+                  <button type="button" class="pw-eye" onclick="togglePw('new_password', this)">👁</button>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-outline" type="submit">Сменить пароль</button>
+                <button class="btn btn-outline" type="button" onclick="toggleTheme()">Переключить тему</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
   </div>
 
-  <script>
-    function togglePw(id, btn) {
-      const inp = document.getElementById(id);
-      const show = inp.type === "password";
-      inp.type = show ? "text" : "password";
-      btn.style.opacity = show ? "1" : "0.45";
-    }
-  </script>
   <script src="script_api.js"></script>
 </body>
 </html>
